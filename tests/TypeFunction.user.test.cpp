@@ -2947,9 +2947,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_functions_extern_name")
     CheckResult result = check(R"(
         type function say_my_name(ty: type)
             if ty:is("extern") then
-                print(`You're {ty:name()}...`)
+                error(`You're {ty:name()}...`)
             else
-                print("I don't have a clue who you are!")
+                error("I don't have a clue who you are!")
             end
         end
 
@@ -2957,7 +2957,9 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_functions_extern_name")
     )");
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
-    CHECK(toString(result.errors[0]) == "You're Heisenberg...");
+    UserDefinedTypeFunctionError* e = get<UserDefinedTypeFunctionError>(result.errors[0]);
+    REQUIRE(e);
+    CHECK(e->message == "'say_my_name' type function errored at runtime: [string \"say_my_name\"]:4: You're Heisenberg...");
 }
 
 TEST_SUITE_END();
