@@ -14,6 +14,7 @@ LUAU_FASTFLAG(LuauTypeFunctionSupportsFrozen)
 LUAU_FASTFLAG(LuauTypeFunctionStructuredErrors)
 LUAU_FASTFLAG(LuauSubtypingMissingPropertiesAsNil)
 LUAU_FASTFLAG(LuauTypeCheckerUdtfRenameClassToExtern)
+LUAU_FASTFLAG(LuauTypeFunctionExternTypeName)
 LUAU_FASTFLAG(LuauUdtfReserveStack)
 
 TEST_SUITE_BEGIN("UserDefinedTypeFunctionTests");
@@ -2930,6 +2931,32 @@ type function test(t: type) return t end
 
     LUAU_REQUIRE_ERROR_COUNT(1, result);
     CHECK(toString(result.errors[0]) == "Type functions do not currently support types of the form 'index<D, L>'");
+}
+
+TEST_CASE_FIXTURE(BuiltinsFixture, "type_functions_extern_name")
+{
+    ScopedFastFlag newSolver{FFlag::DebugLuauForceOldSolver, false};
+    ScopedFastFlag externName{FFlag::LuauTypeFunctionExternTypeName, true};
+
+    loadDefinition(R"(
+        declare extern type Heisenberg with
+        end
+    )");
+
+    CheckResult result = check(R"(
+        type function say_my_name(ty: type)
+            if ty:is("extern") then
+                print(`You're {ty:name()}...`)
+            else
+                print("I don't have a clue who you are!")
+            end
+        end
+
+        local walter: say_my_name<Heisenberg>
+    )");
+
+    LUAU_REQUIRE_ERROR_COUNT(1, result);
+    CHECK(toString(result.errors[0]) == "You're Heisenberg...");
 }
 
 TEST_SUITE_END();
