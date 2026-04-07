@@ -222,6 +222,7 @@ struct TypeFunctionExternType
     using Name = std::string;
     using Props = std::map<Name, TypeFunctionProperty>;
 
+    Name name;
     Props props;
 
     std::optional<TypeFunctionTableIndexer> indexer;

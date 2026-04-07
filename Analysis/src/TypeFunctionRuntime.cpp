@@ -28,6 +28,7 @@ LUAU_FASTFLAG(LuauIntegerType)
 LUAU_FASTFLAGVARIABLE(LuauTypeFunctionSupportsFrozen)
 LUAU_FASTFLAGVARIABLE(LuauUdtfReserveStack)
 LUAU_FASTFLAGVARIABLE(LuauTypeFunctionStructuredErrors)
+LUAU_FASTFLAGVARIABLE(LuauTypeFunctionExternTypeName)
 
 namespace Luau
 {
@@ -1503,14 +1504,28 @@ static int getWriteParent(lua_State* L)
 }
 
 // Luau: `self:name() -> string?`
-// Returns the name of the generic or 'nil' if the generic is unnamed
-static int getGenericName(lua_State* L)
+// Returns the name of the generic or extern type, or 'nil' if the generic is unnamed
+static int getName(lua_State* L)
 {
     TypeFunctionTypeId self = getTypeUserData(L, 1);
-    auto tfgt = get<TypeFunctionGenericType>(self);
-    if (!tfgt)
-        luaL_error(L, "type.name: expected self to be a generic, but got %s instead", getTag(L, self).c_str());
 
+    if (FFlag::LuauTypeFunctionExternTypeName)
+    {
+        if (auto tfct = get<TypeFunctionExternType>(self))
+        {
+            lua_pushstring(L, tfct->name.c_str());
+            return 1;
+        }
+    }
+
+    auto tfgt = get<TypeFunctionGenericType>(self);
+
+    if (!tfgt)
+        if (FFlag::LuauTypeFunctionExternTypeName)
+            luaL_error(L, "type.name: expected self to be a generic or extern, but got %s instead", getTag(L, self).c_str());
+        else
+            luaL_error(L, "type.name: expected self to be a generic, but got %s instead", getTag(L, self).c_str());
+    
     if (tfgt->isNamed)
         lua_pushstring(L, tfgt->name.c_str());
     else
@@ -1925,7 +1940,7 @@ void registerTypeUserData(lua_State* L)
         // Union and Intersection type methods
         {"components", getComponents},
 
-        //  Extern type methods
+        // Extern type methods
         {"readparent", getReadParent},
         {"writeparent", getWriteParent},
 
@@ -1933,8 +1948,10 @@ void registerTypeUserData(lua_State* L)
         {"setgenerics", setFunctionGenerics},
         {"generics", getFunctionGenerics},
 
+        // Extern/Generic type methods
+        {"name", getName},
+
         // Generic type methods
-        {"name", getGenericName},
         {"ispack", getGenericIsPack},
 
         {nullptr, nullptr}
