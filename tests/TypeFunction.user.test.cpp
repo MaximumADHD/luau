@@ -2937,6 +2937,7 @@ TEST_CASE_FIXTURE(BuiltinsFixture, "type_functions_extern_name")
 {
     ScopedFastFlag newSolver{FFlag::DebugLuauForceOldSolver, false};
     ScopedFastFlag externName{FFlag::LuauTypeFunctionExternTypeName, true};
+    ScopedFastFlag renameClassToExtern{FFlag::LuauTypeCheckerUdtfRenameClassToExtern, true};
 
     loadDefinition(R"(
         declare extern type Heisenberg with
