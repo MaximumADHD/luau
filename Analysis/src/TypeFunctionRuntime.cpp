@@ -1513,8 +1513,11 @@ static int getName(lua_State* L)
     {
         if (auto tfct = get<TypeFunctionExternType>(self))
         {
-            lua_pushstring(L, tfct->name.c_str());
-            return 1;
+            if (auto exTy = get<ExternType>(tfct->externTy))
+            {
+                lua_pushstring(L, exTy->name.c_str());
+                return 1;
+            }
         }
     }
 

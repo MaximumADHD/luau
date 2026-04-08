@@ -21,7 +21,6 @@
 LUAU_DYNAMIC_FASTINTVARIABLE(LuauTypeFunctionSerdeIterationLimit, 100'000);
 
 LUAU_FASTFLAG(LuauTypeFunctionStructuredErrors)
-LUAU_FASTFLAG(LuauTypeFunctionExternTypeName)
 
 namespace Luau
 {
@@ -445,9 +444,6 @@ private:
 
     void serializeChildren(const ExternType* c1, TypeFunctionExternType* c2)
     {
-        if (FFlag::LuauTypeFunctionExternTypeName)
-            c2->name = c1->name;
-
         for (const auto& [k, p] : c1->props)
         {
             std::optional<TypeFunctionTypeId> readTy = std::nullopt;
